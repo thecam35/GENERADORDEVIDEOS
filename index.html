@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veo3 - Avatar que HABLA desde TEXTO (con tu API Key)</title>
+    <title>Veo3 - Avatar que HABLA (Demo con IA real)</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -96,29 +96,15 @@
             width: 100%;
             margin-top: 8px;
         }
-        .voice-preview {
-            margin-top: 8px;
-            font-size: 12px;
-            color: #888;
-        }
-        .example-scripts {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-        .example-btn {
-            background: #1a1a24;
+        .api-key-input {
+            width: 100%;
+            background: #0a0a0f;
             border: 1px solid #2a2a35;
-            border-radius: 20px;
-            padding: 6px 12px;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .example-btn:hover {
-            background: #a855f7;
-            border-color: #a855f7;
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            margin-top: 8px;
+            font-family: monospace;
         }
     </style>
 </head>
@@ -127,11 +113,23 @@
         <h1 style="margin-bottom: 24px;">🎬 Veo3 - <span style="color: #a855f7;">Avatar que HABLA desde TEXTO</span></h1>
         
         <div class="info-banner">
-            🎯 <strong>¡LA FOTO COBRA VIDA Y HABLA!</strong><br>
+            🎯 <strong>LA FOTO COBRA VIDA Y HABLA</strong><br>
             ✅ Sube una foto de una persona<br>
             ✅ Escribe el texto que quieres que DIGA<br>
-            ✅ La IA mueve los labios y genera la voz automáticamente<br>
-            📝 <strong>Tu API Key ya está configurada - Todo listo para usar!</strong>
+            ✅ La IA genera la voz y mueve los labios<br>
+            <br>
+            <strong>🔑 Para usar la IA real:</strong><br>
+            1. Regístrate gratis en <a href="https://sync.so/signup" target="_blank" style="color:#a855f7;">sync.so/signup</a><br>
+            2. Ve a <a href="https://sync.so/settings/api-keys" target="_blank" style="color:#a855f7;">API Keys</a> y crea una clave<br>
+            3. Pégala abajo y listo
+        </div>
+
+        <div class="card" style="margin-bottom: 24px;">
+            <h3>🔑 Tu API Key de Sync Labs</h3>
+            <input type="password" id="apiKeyInput" class="api-key-input" placeholder="Pega aquí tu API Key de Sync Labs (empieza con sync_)">
+            <div style="font-size: 12px; color: #888; margin-top: 8px;">
+                📝 No la guardamos, solo se usa en tu navegador. Consíguela en sync.so/settings/api-keys
+            </div>
         </div>
 
         <div class="grid">
@@ -142,61 +140,30 @@
                     <img id="photoPreview" style="display: none;">
                 </div>
                 <input type="file" id="photoInput" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;">
-                <div style="font-size: 12px; color: #888; margin-top: 8px;">✅ Mejor si es una foto frontal, mirando a cámara</div>
+                <div style="font-size: 12px; color: #888; margin-top: 8px;">✅ Mejor si es frontal, mirando a cámara</div>
             </div>
 
             <div class="card">
                 <h3>🗣️ 2. Elige la VOZ</h3>
                 <select id="voiceSelect">
-                    <option value="Xb7hH8MSUJpSbSDYk0k2">🤵 Español - Carlos (hombre, natural)</option>
-                    <option value="EXAVITQu4L4MjGn3R0Y8">👩 Español - Elena (mujer, cálida)</option>
+                    <option value="Xb7hH8MSUJpSbSDYk0k2">🤵 Español - Carlos (hombre)</option>
+                    <option value="EXAVITQu4L4MjGn3R0Y8">👩 Español - Elena (mujer)</option>
                     <option value="VR6AqWLX5iPhWTwpz4vJ">🇲🇽 Español México - Pablo</option>
                     <option value="MFX37Nrgo8H41lOjnJyZ">🇪🇸 Español España - Miguel</option>
-                    <option value="21m00Tcm4TlvDq8ikWAM">🇺🇸 English US - Adam</option>
-                    <option value="AZnzlk1XvdvUeBnXmlld">🇫🇷 Français - Claire</option>
-                    <option value="pqHfZKP75CvOlQylNhV4">🇬🇧 English UK - Bella</option>
                 </select>
-                <div class="voice-preview">🎧 Las voces suenan naturales, generadas por ElevenLabs</div>
             </div>
         </div>
 
         <div class="card" style="margin-top: 24px;">
             <h3>📝 3. ESCRIBE lo que quieres que DIGA la persona</h3>
-            <textarea id="scriptInput" rows="4" placeholder="Ejemplo: ¡Hola! Me alegra mucho verte. Hoy vamos a crear algo increíble juntos. ¿Estás listo para empezar?"></textarea>
-            <div class="example-scripts">
-                <span style="font-size: 12px; color:#888;">Ejemplos rápidos:</span>
-                <span class="example-btn" data-text="¡Hola! Soy un avatar creado con inteligencia artificial. Mira cómo muevo mis labios al hablar.">Demo 1</span>
-                <span class="example-btn" data-text="Bienvenido a Veo3 Studio. Con esta tecnología, cualquier foto puede cobrar vida y hablar.">Demo 2</span>
-                <span class="example-btn" data-text="¡Qué increíble es la tecnología! Ahora puedo hablar y mover los labios gracias a la IA.">Demo 3</span>
+            <textarea id="scriptInput" rows="4" placeholder="Ejemplo: ¡Hola! Me alegra mucho verte. Hoy vamos a crear algo increíble juntos."></textarea>
+            <div class="example-scripts" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                <span style="font-size: 12px; color:#888;">Ejemplos:</span>
+                <span class="example-btn" style="background:#1a1a24; padding:4px 12px; border-radius:20px; cursor:pointer; font-size:12px;" data-text="¡Hola! Soy un avatar creado con inteligencia artificial. Mira cómo muevo mis labios al hablar.">Demo 1</span>
+                <span class="example-btn" style="background:#1a1a24; padding:4px 12px; border-radius:20px; cursor:pointer; font-size:12px;" data-text="Bienvenido a Veo3 Studio. Con esta tecnología, cualquier foto puede cobrar vida y hablar.">Demo 2</span>
             </div>
             <div style="font-size: 12px; color: #888; margin-top: 12px;">
-                ⚡ Máximo 500 caracteres para la versión gratis. El video durará lo que tarde en decir el texto.
-            </div>
-        </div>
-
-        <div class="card" style="margin-top: 24px;">
-            <h3>⚙️ Configuración</h3>
-            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                <div style="flex: 1;">
-                    <label>🎭 Estilo de voz</label>
-                    <select id="styleSelect">
-                        <option value="neutral">Normal</option>
-                        <option value="cheerful">Alegre / Feliz</option>
-                        <option value="sad">Triste</option>
-                        <option value="whisper">Susurro</option>
-                        <option value="excited">Emocionado / Enérgico</option>
-                        <option value="friendly">Amigable</option>
-                        <option value="professional">Profesional</option>
-                    </select>
-                </div>
-                <div style="flex: 1;">
-                    <label>📐 Relación del video</label>
-                    <select id="aspectSelect">
-                        <option value="16:9">16:9 (Horizontal - YouTube)</option>
-                        <option value="9:16">9:16 (Vertical - TikTok/Reels)</option>
-                        <option value="1:1">1:1 (Cuadrado - Instagram)</option>
-                    </select>
-                </div>
+                ⚡ Máx 300 caracteres para versión gratis. El video durará lo que tarde en decir el texto.
             </div>
         </div>
 
@@ -214,12 +181,6 @@
     </div>
 
     <script>
-        // ============================================================
-        // ✅ TU API KEY DE SYNC LABS - YA CONFIGURADA
-        // ============================================================
-        const SYNC_API_KEY = "sk-BM7d7KePRdyqzKkEdMAw5A.v7swRDvtEdBjKRnl55sLAmcfT7V5kCVs";
-        const SYNC_API_URL = "https://api.sync.so/v2/generate";
-        
         let photoFile = null;
         let isGenerating = false;
         
@@ -234,8 +195,7 @@
         const statusDiv = document.getElementById('status');
         const scriptInput = document.getElementById('scriptInput');
         const voiceSelect = document.getElementById('voiceSelect');
-        const styleSelect = document.getElementById('styleSelect');
-        const aspectSelect = document.getElementById('aspectSelect');
+        const apiKeyInput = document.getElementById('apiKeyInput');
         
         // Ejemplos rápidos
         document.querySelectorAll('.example-btn').forEach(btn => {
@@ -249,46 +209,18 @@
         photoInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file && file.type.startsWith('image/')) {
-                // Redimensionar si es muy grande
+                photoFile = file;
                 const reader = new FileReader();
                 reader.onload = (ev) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        const maxSize = 1280;
-                        
-                        if (width > maxSize || height > maxSize) {
-                            if (width > height) {
-                                height = (height * maxSize) / width;
-                                width = maxSize;
-                            } else {
-                                width = (width * maxSize) / height;
-                                height = maxSize;
-                            }
-                        }
-                        
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        canvas.toBlob((blob) => {
-                            photoFile = blob;
-                            photoPreview.src = canvas.toDataURL();
-                            photoPreview.style.display = 'block';
-                            photoPlaceholder.style.display = 'none';
-                        }, 'image/jpeg', 0.9);
-                    };
-                    img.src = ev.target.result;
+                    photoPreview.src = ev.target.result;
+                    photoPreview.style.display = 'block';
+                    photoPlaceholder.style.display = 'none';
                 };
                 reader.readAsDataURL(file);
             }
         });
         
-        // Subir imagen a un hosting temporal (catbox.moe es gratis y confiable)
-        async function uploadToTempHost(file) {
+        async function uploadToCatbox(file) {
             const formData = new FormData();
             formData.append('fileToUpload', file);
             formData.append('reqtype', 'fileupload');
@@ -298,30 +230,19 @@
                 body: formData
             });
             
-            if (!response.ok) {
-                throw new Error('Error subiendo imagen');
-            }
-            
-            const url = await response.text();
-            return url.trim();
-        }
-        
-        // Mapear estilos de voz a formato Sync Labs
-        function getStylePrompt(style, script) {
-            const styleMap = {
-                'neutral': script,
-                'cheerful': `[happy] ${script}`,
-                'sad': `[sad] ${script}`,
-                'whisper': `[whisper] ${script}`,
-                'excited': `[excited] ${script}`,
-                'friendly': `[friendly] ${script}`,
-                'professional': script
-            };
-            return styleMap[style] || script;
+            if (!response.ok) throw new Error('Error subiendo imagen');
+            return await response.text();
         }
         
         async function generateVideo() {
             if (isGenerating) return;
+            
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                statusDiv.innerHTML = "❌ Necesitas una API Key de Sync Labs. Regístrate gratis en sync.so/signup y pégala arriba";
+                statusDiv.style.color = "#f87171";
+                return;
+            }
             
             if (!photoFile) {
                 statusDiv.innerHTML = "❌ Sube una foto de la persona primero";
@@ -336,46 +257,32 @@
                 return;
             }
             
-            if (script.length > 500) {
-                statusDiv.innerHTML = "⚠️ El texto es muy largo (máx 500 caracteres para la versión gratis). Acórtalo un poco.";
-                statusDiv.style.color = "#fbbf24";
-                return;
-            }
-            
             isGenerating = true;
             generateBtn.disabled = true;
-            generateBtn.innerHTML = '<span class="loading-spinner"></span> Generando voz y animando... (30-60 segundos)';
+            generateBtn.innerHTML = '<span class="loading-spinner"></span> Generando... (30-60 segundos)';
             statusDiv.innerHTML = "📤 Subiendo foto...";
             statusDiv.style.color = "#a855f7";
             resultArea.style.display = 'none';
             
             try {
-                // 1. Subir la foto a un hosting temporal
                 statusDiv.innerHTML = "📤 Subiendo foto al servidor...";
-                const photoUrl = await uploadToTempHost(photoFile);
-                console.log("Foto subida:", photoUrl);
+                const photoUrl = await uploadToCatbox(photoFile);
                 
-                // 2. Preparar el script con estilo
-                const finalScript = getStylePrompt(styleSelect.value, script);
+                statusDiv.innerHTML = "🗣️ Generando voz y sincronizando labios...";
                 
-                statusDiv.innerHTML = "🗣️ Generando voz con IA y sincronizando labios... (esto puede tomar hasta 1 minuto)";
-                
-                // 3. Llamar a Sync Labs API
                 const payload = {
                     model: "lipsync-2-pro",
                     video_url: photoUrl,
-                    script: finalScript,
+                    script: script,
                     voice_id: voiceSelect.value,
                     output_resolution: "720p",
                     sync_mode: "accurate"
                 };
                 
-                console.log("Enviando a Sync Labs:", payload);
-                
-                const response = await fetch(SYNC_API_URL, {
+                const response = await fetch("https://api.sync.so/v2/generate", {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${SYNC_API_KEY}`,
+                        'Authorization': `Bearer ${apiKey}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(payload)
@@ -383,53 +290,42 @@
                 
                 if (!response.ok) {
                     const error = await response.text();
-                    console.error("Error response:", error);
-                    throw new Error(`Error ${response.status}: ${error.substring(0, 200)}`);
+                    throw new Error(`Error ${response.status}: ${error.substring(0, 150)}`);
                 }
                 
                 const data = await response.json();
-                console.log("Respuesta:", data);
-                
                 const generationId = data.id;
                 
-                // 4. Polling para esperar el resultado
                 statusDiv.innerHTML = "⏳ Procesando... la persona está aprendiendo a hablar...";
                 
                 let videoUrl = null;
-                let attempts = 0;
-                const maxAttempts = 45; // ~2 minutos máximo
-                
-                while (attempts < maxAttempts && !videoUrl) {
+                for (let i = 0; i < 45; i++) {
                     await new Promise(r => setTimeout(r, 3000));
-                    attempts++;
                     
                     const statusRes = await fetch(`https://api.sync.so/v2/generations/${generationId}`, {
-                        headers: { 'Authorization': `Bearer ${SYNC_API_KEY}` }
+                        headers: { 'Authorization': `Bearer ${apiKey}` }
                     });
                     const statusData = await statusRes.json();
-                    
-                    console.log(`Intento ${attempts}:`, statusData.status);
                     
                     if (statusData.status === 'COMPLETED') {
                         videoUrl = statusData.output_url;
                         break;
                     } else if (statusData.status === 'FAILED') {
-                        throw new Error('La generación falló: ' + JSON.stringify(statusData));
+                        throw new Error('La generación falló');
                     }
                     
-                    statusDiv.innerHTML = `⏳ Generando... (${Math.floor(attempts * 2.2)}%) - La persona está cobrando vida`;
+                    statusDiv.innerHTML = `⏳ Generando... (${Math.floor(i * 2.2)}%)`;
                 }
                 
-                if (!videoUrl) throw new Error('Timeout: La generación tomó demasiado tiempo');
+                if (!videoUrl) throw new Error('Timeout');
                 
                 resultVideo.src = videoUrl;
                 resultArea.style.display = 'block';
-                statusDiv.innerHTML = "✅ ¡LA PERSONA HABLA! El texto que escribiste ahora lo dice ella, moviendo los labios.";
+                statusDiv.innerHTML = "✅ ¡LA PERSONA HABLA! El texto que escribiste ahora lo dice ella.";
                 statusDiv.style.color = "#4ade80";
-                resultArea.scrollIntoView({ behavior: 'smooth' });
                 
             } catch (error) {
-                console.error("Error completo:", error);
+                console.error(error);
                 statusDiv.innerHTML = `❌ Error: ${error.message}`;
                 statusDiv.style.color = "#f87171";
             } finally {
@@ -451,7 +347,7 @@
         generateBtn.addEventListener('click', generateVideo);
         document.getElementById('downloadBtn')?.addEventListener('click', downloadVideo);
         
-        statusDiv.innerHTML = "✅ TODO LISTO! Sube una foto, escribe un texto y la persona HABLARÁ esas palabras";
+        statusDiv.innerHTML = "✅ Listo! 1. Regístrate en sync.so | 2. Pega tu API Key | 3. Sube foto y escribe texto";
         statusDiv.style.color = "#4ade80";
     </script>
 </body>
