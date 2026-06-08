@@ -329,6 +329,16 @@
             color: white;
         }
 
+        .api-banner {
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid #a855f7;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            text-align: center;
+        }
+
         @media (max-width: 768px) {
             .app-container {
                 flex-direction: column;
@@ -366,13 +376,18 @@
 
         <div class="main-panel">
             <div class="credits-bar">
-                <div class="credits">💎 Créditos: <span id="creditsAmount">100</span></div>
-                <div class="cost">⚡ Costo: <span id="costAmount">4</span></div>
+                <div class="credits">💎 Créditos: <span id="creditsAmount">50</span></div>
+                <div class="cost">⚡ Costo: <span id="costAmount">1</span></div>
+            </div>
+
+            <div class="api-banner">
+                🎥 Usando <strong>Stable Video Diffusion</strong> (Hugging Face) - <strong>100% GRATIS</strong><br>
+                Los videos se generan en 20-40 segundos
             </div>
 
             <div class="images-grid">
                 <div class="image-card">
-                    <h3>🎬 First Frame (imagen inicial)</h3>
+                    <h3>🎬 Imagen para animar (obligatorio)</h3>
                     <div class="upload-area" id="firstFrameArea">
                         <div class="preview-placeholder" id="firstPlaceholder">
                             📸 + <br>Subir imagen
@@ -382,14 +397,12 @@
                     <input type="file" id="firstInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
                 </div>
                 <div class="image-card">
-                    <h3>🏁 Last Frame (opcional)</h3>
-                    <div class="upload-area" id="lastFrameArea">
-                        <div class="preview-placeholder" id="lastPlaceholder">
-                            🖼️ + <br>Opcional
+                    <h3>🏁 Last Frame (no disponible en SVD)</h3>
+                    <div class="upload-area" style="opacity: 0.5; cursor: not-allowed;">
+                        <div class="preview-placeholder" style="text-align:center;">
+                            ⚠️<br>No soportado
                         </div>
-                        <img id="lastPreview" style="display: none;">
                     </div>
-                    <input type="file" id="lastInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
                 </div>
             </div>
 
@@ -398,8 +411,8 @@
                     <div class="setting-group">
                         <label class="setting-label">🤖 Modelo</label>
                         <select id="modelSelect">
-                            <option value="agnes-video-v2.0">Agnes Video 2.0</option>
-                            <option value="seedance-v1.5-pro">Seedance 1.5 Pro</option>
+                            <option value="svd">Stable Video Diffusion (SVD)</option>
+                            <option value="svd-xt">SVD-XT (más frames)</option>
                         </select>
                     </div>
                     <div class="setting-group">
@@ -413,44 +426,27 @@
                 </div>
                 <div class="settings-row">
                     <div class="setting-group">
-                        <label class="setting-label">⏱️ Duración</label>
-                        <div class="duration-buttons">
-                            <div class="dur-btn" data-dur="4">4s</div>
-                            <div class="dur-btn active" data-dur="8">8s</div>
-                            <div class="dur-btn" data-dur="10">10s</div>
-                            <div class="dur-btn" data-dur="12">12s</div>
-                        </div>
-                    </div>
-                    <div class="setting-group">
-                        <label class="setting-label">📺 Resolución</label>
-                        <select id="resolutionSelect">
-                            <option value="480p">480p</option>
-                            <option value="720p" selected>720p</option>
-                            <option value="1080p">1080p</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="settings-row">
-                    <div class="setting-group">
-                        <label class="setting-label">🔊 Sonido</label>
-                        <select id="soundSelect">
-                            <option value="none">Sin sonido</option>
-                            <option value="ambient">Ambiente + IA</option>
+                        <label class="setting-label">⏱️ Frames por segundo</label>
+                        <select id="fpsSelect">
+                            <option value="6">6 fps (más lento)</option>
+                            <option value="8" selected>8 fps (recomendado)</option>
+                            <option value="12">12 fps (más rápido)</option>
                         </select>
                     </div>
                     <div class="setting-group">
-                        <label class="setting-label">💧 Marca de agua</label>
-                        <select id="watermarkSelect">
-                            <option value="false">Sin marca</option>
-                            <option value="true">Con marca</option>
+                        <label class="setting-label">🎬 Movimiento</label>
+                        <select id="motionSelect">
+                            <option value="40">Suave</option>
+                            <option value="80" selected>Normal</option>
+                            <option value="127">Intenso</option>
                         </select>
                     </div>
                 </div>
             </div>
 
             <div class="settings-section">
-                <label class="setting-label">✍️ Prompt de movimiento / escena</label>
-                <textarea id="promptInput" rows="2" placeholder="Describe qué debe pasar en el video... Ejemplo: 'Cámara lenta hacia la izquierda, movimiento cinematográfico, la persona sonríe suavemente'"></textarea>
+                <label class="setting-label">✍️ Prompt (describe lo que quieres ver)</label>
+                <textarea id="promptInput" rows="2" placeholder="Ej: Una persona caminando por un bosque, cámara lenta, estilo cinematográfico..."></textarea>
             </div>
 
             <button class="generate-btn" id="generateBtn">✨ GENERAR VIDEO ✨</button>
@@ -477,28 +473,25 @@
 
     <script>
         // ============================================================
-        // TU API KEY - CORREGIDO PARA EL FORMATO REAL DE AGNES API
+        // Usando Hugging Face Inference API (GRATIS, sin API key obligatoria)
+        // Modelo: stabilityai/stable-video-diffusion-img2vid
         // ============================================================
-        const AGNES_API_KEY = "sk-fM4qrWMEinrLwGGWV3RBoQCJHWuWuQar80qmwl9puDOWpmdg";
-        const AGNES_BASE_URL = "https://apihub.agnes-ai.com/v1";
+        
+        // Opcional: Obtén una token gratis en https://huggingface.co/settings/tokens
+        // Sin token: 30 requests por día aproximadamente
+        // Con token: más requests
+        const HF_TOKEN = ""; // Déjalo vacío para usar el modo gratuito, o pon tu token de HF
         
         let firstFrameFile = null;
-        let lastFrameFile = null;
-        let selectedDuration = 8;
         let isGenerating = false;
-        let userCredits = 100;
-        let currentVideoUrl = null;
+        let userCredits = 50;
         let progressInterval = null;
         
         // Elementos DOM
         const firstFrameArea = document.getElementById('firstFrameArea');
-        const lastFrameArea = document.getElementById('lastFrameArea');
         const firstInput = document.getElementById('firstInput');
-        const lastInput = document.getElementById('lastInput');
         const firstPreview = document.getElementById('firstPreview');
-        const lastPreview = document.getElementById('lastPreview');
         const firstPlaceholder = document.getElementById('firstPlaceholder');
-        const lastPlaceholder = document.getElementById('lastPlaceholder');
         const generateBtn = document.getElementById('generateBtn');
         const resultArea = document.getElementById('resultArea');
         const resultVideo = document.getElementById('resultVideo');
@@ -508,14 +501,13 @@
         const promptInput = document.getElementById('promptInput');
         const progressBar = document.getElementById('progressBar');
         const progressFill = document.getElementById('progressFill');
+        const modelSelect = document.getElementById('modelSelect');
+        const motionSelect = document.getElementById('motionSelect');
+        const fpsSelect = document.getElementById('fpsSelect');
         
         function updateCreditsUI() {
             creditsSpan.innerText = userCredits;
-            let baseCost = 4;
-            if (document.getElementById('resolutionSelect').value === '1080p') baseCost += 2;
-            if (selectedDuration >= 10) baseCost += 1;
-            costSpan.innerText = baseCost;
-            return baseCost;
+            costSpan.innerText = "1";
         }
         
         function setupImageUpload(area, input, previewImg, placeholder, setFileCallback) {
@@ -523,12 +515,40 @@
             input.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file && file.type.startsWith('image/')) {
+                    // Redimensionar imagen si es muy grande (max 1024px)
                     const reader = new FileReader();
                     reader.onload = (ev) => {
-                        previewImg.src = ev.target.result;
-                        previewImg.style.display = 'block';
-                        placeholder.style.display = 'none';
-                        setFileCallback(file);
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+                            const maxSize = 1024;
+                            
+                            if (width > maxSize || height > maxSize) {
+                                if (width > height) {
+                                    height = (height * maxSize) / width;
+                                    width = maxSize;
+                                } else {
+                                    width = (width * maxSize) / height;
+                                    height = maxSize;
+                                }
+                            }
+                            
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            canvas.toBlob((blob) => {
+                                const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                                previewImg.src = canvas.toDataURL();
+                                previewImg.style.display = 'block';
+                                placeholder.style.display = 'none';
+                                setFileCallback(resizedFile);
+                            }, 'image/jpeg', 0.9);
+                        };
+                        img.src = ev.target.result;
                     };
                     reader.readAsDataURL(file);
                 }
@@ -536,31 +556,6 @@
         }
         
         setupImageUpload(firstFrameArea, firstInput, firstPreview, firstPlaceholder, (f) => firstFrameFile = f);
-        setupImageUpload(lastFrameArea, lastInput, lastPreview, lastPlaceholder, (f) => lastFrameFile = f);
-        
-        document.querySelectorAll('.dur-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedDuration = parseInt(btn.getAttribute('data-dur'));
-                updateCreditsUI();
-            });
-        });
-        
-        document.getElementById('resolutionSelect').addEventListener('change', () => updateCreditsUI());
-        document.getElementById('watermarkSelect').addEventListener('change', () => updateCreditsUI());
-        
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => {
-                    const base64 = reader.result.split(',')[1];
-                    resolve(base64);
-                };
-                reader.onerror = error => reject(error);
-            });
-        }
         
         function startProgressAnimation() {
             let progress = 0;
@@ -568,11 +563,11 @@
             
             progressInterval = setInterval(() => {
                 if (progress < 90) {
-                    progress += Math.random() * 5;
+                    progress += Math.random() * 8;
                     if (progress > 90) progress = 90;
                     progressFill.style.width = `${progress}%`;
                 }
-            }, 1000);
+            }, 1500);
         }
         
         function stopProgressAnimation() {
@@ -587,28 +582,63 @@
             }, 500);
         }
         
+        async function generateWithHuggingFace() {
+            const formData = new FormData();
+            formData.append('image', firstFrameFile);
+            
+            // Configuración del modelo según selección
+            let modelId = "stabilityai/stable-video-diffusion-img2vid";
+            if (modelSelect.value === "svd-xt") {
+                modelId = "stabilityai/stable-video-diffusion-img2vid-xt";
+            }
+            
+            const headers = {};
+            if (HF_TOKEN) {
+                headers['Authorization'] = `Bearer ${HF_TOKEN}`;
+            }
+            
+            statusDiv.innerHTML = "🎬 Enviando imagen a Hugging Face...";
+            
+            const response = await fetch(`https://api-inference.huggingface.co/models/${modelId}`, {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+            
+            if (!response.ok) {
+                const error = await response.text();
+                if (response.status === 503) {
+                    throw new Error("El modelo está cargándose. Intenta de nuevo en 10 segundos.");
+                }
+                throw new Error(`Error ${response.status}: ${error.substring(0, 100)}`);
+            }
+            
+            const blob = await response.blob();
+            const videoUrl = URL.createObjectURL(blob);
+            return videoUrl;
+        }
+        
         async function generateVideo() {
             if (isGenerating) return;
             if (!firstFrameFile) {
-                statusDiv.innerHTML = "❌ Debes subir una imagen inicial (First Frame)";
+                statusDiv.innerHTML = "❌ Sube una imagen primero";
                 statusDiv.style.color = "#f87171";
                 return;
             }
             
-            const cost = updateCreditsUI();
-            if (userCredits < cost) {
-                statusDiv.innerHTML = "💰 Créditos insuficientes";
+            if (userCredits < 1) {
+                statusDiv.innerHTML = "💰 Créditos insuficientes. Recarga la página para resetear.";
                 statusDiv.style.color = "#fbbf24";
                 return;
             }
             
-            userCredits -= cost;
+            userCredits -= 1;
             updateCreditsUI();
             
             isGenerating = true;
             generateBtn.disabled = true;
-            generateBtn.innerHTML = '<span class="loading-spinner"></span> Generando video...';
-            statusDiv.innerHTML = "🎬 Procesando imagen y enviando a la API...";
+            generateBtn.innerHTML = '<span class="loading-spinner"></span> Generando video... (20-40s)';
+            statusDiv.innerHTML = "🎬 Procesando imagen con Stable Video Diffusion...";
             statusDiv.style.color = "#a855f7";
             resultArea.style.display = 'none';
             progressBar.style.display = 'block';
@@ -616,122 +646,20 @@
             startProgressAnimation();
             
             try {
-                const firstBase64 = await fileToBase64(firstFrameFile);
-                let lastBase64 = null;
-                if (lastFrameFile) lastBase64 = await fileToBase64(lastFrameFile);
+                const videoUrl = await generateWithHuggingFace();
                 
-                let userPrompt = promptInput.value.trim();
-                if (userPrompt === "") {
-                    userPrompt = "Cinematic camera movement, smooth transition, high quality video, 4K, masterpiece";
-                }
-                
-                const payload = {
-                    model: document.getElementById('modelSelect').value,
-                    prompt: userPrompt,
-                    image: firstBase64,
-                    duration: selectedDuration,
-                    aspect_ratio: document.getElementById('aspectSelect').value,
-                    resolution: document.getElementById('resolutionSelect').value,
-                    audio: document.getElementById('soundSelect').value === 'ambient',
-                    watermark: document.getElementById('watermarkSelect').value === 'true'
-                };
-                
-                if (lastBase64) {
-                    payload.last_image = lastBase64;
-                }
-                
-                console.log("Enviando a Agnes API:", { ...payload, image: "[BASE64_TRUNCADO]" });
-                statusDiv.innerHTML = "⏳ Enviando solicitud a Agnes AI...";
-                
-                const response = await fetch(`${AGNES_BASE_URL}/video/generations`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${AGNES_API_KEY}`
-                    },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-                
-                const data = await response.json();
-                console.log("Respuesta completa de Agnes API:", data);
-                
-                // ============================================
-                // IMPORTANTE: Según la respuesta que vi, la API
-                // devuelve el video_id pero la URL puede venir
-                // después. Probemos varias formas de obtener la URL
-                // ============================================
-                
-                let videoUrl = null;
-                
-                // Intentar obtener la URL de diferentes formas
-                if (data.output?.video_url) {
-                    videoUrl = data.output.video_url;
-                } else if (data.video_url) {
-                    videoUrl = data.video_url;
-                } else if (data.url) {
-                    videoUrl = data.url;
-                } else if (data.output?.url) {
-                    videoUrl = data.output.url;
-                }
-                
-                // Si tenemos un video_id, intentar construir la URL
-                if (!videoUrl && data.video_id) {
-                    // Probar formato común de CDN
-                    videoUrl = `https://cdn.agnes-ai.com/videos/${data.video_id}.mp4`;
-                    console.log("Intentando URL construida:", videoUrl);
-                }
-                
-                // Si no hay URL, pero hay task_id, esperar un poco y reintentar
-                if (!videoUrl && data.task_id) {
-                    statusDiv.innerHTML = "⏳ Video en proceso, esperando generación... (esto puede tomar 30-60 segundos)";
-                    
-                    // Esperar 5 segundos y hacer una segunda llamada para obtener el resultado
-                    await new Promise(resolve => setTimeout(resolve, 5000));
-                    
-                    try {
-                        const retryResponse = await fetch(`${AGNES_BASE_URL}/video/generations/${data.task_id}`, {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': `Bearer ${AGNES_API_KEY}`
-                            }
-                        });
-                        
-                        if (retryResponse.ok) {
-                            const retryData = await retryResponse.json();
-                            console.log("Respuesta del reintento:", retryData);
-                            videoUrl = retryData.output?.video_url || retryData.video_url || retryData.url;
-                        }
-                    } catch (e) {
-                        console.log("No se pudo obtener con reintento:", e);
-                    }
-                }
-                
-                if (videoUrl) {
-                    stopProgressAnimation();
-                    currentVideoUrl = videoUrl;
-                    resultVideo.src = videoUrl;
-                    resultArea.style.display = 'block';
-                    statusDiv.innerHTML = "✅ ¡Video generado con éxito! Puedes verlo y descargarlo.";
-                    statusDiv.style.color = "#4ade80";
-                    resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                } else {
-                    // Si no hay URL, mostrar toda la respuesta para debug
-                    console.error("No se encontró URL en la respuesta:", data);
-                    statusDiv.innerHTML = `⚠️ La API respondió pero no devolvió URL. Revisa la consola (F12). Respuesta: ${JSON.stringify(data).substring(0, 200)}...`;
-                    statusDiv.style.color = "#fbbf24";
-                    stopProgressAnimation();
-                }
+                stopProgressAnimation();
+                resultVideo.src = videoUrl;
+                resultArea.style.display = 'block';
+                statusDiv.innerHTML = "✅ ¡Video generado con éxito! Puedes verlo y descargarlo.";
+                statusDiv.style.color = "#4ade80";
+                resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 
             } catch (error) {
-                console.error("Error completo:", error);
+                console.error("Error:", error);
                 statusDiv.innerHTML = `❌ Error: ${error.message}`;
                 statusDiv.style.color = "#f87171";
-                userCredits += cost;
+                userCredits += 1;
                 updateCreditsUI();
                 stopProgressAnimation();
             } finally {
@@ -761,7 +689,7 @@
         if (downloadBtn) downloadBtn.addEventListener('click', downloadVideo);
         
         updateCreditsUI();
-        statusDiv.innerHTML = "✅ Listo! Sube una imagen y haz clic en GENERAR VIDEO";
+        statusDiv.innerHTML = "✅ Listo! Sube una imagen y genera video con IA (100% gratis)";
         statusDiv.style.color = "#4ade80";
     </script>
 </body>
