@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Veo3 Studio - Generador de Video con IA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 100%);
+            color: #eef2ff;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 24px;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: rgba(18, 18, 26, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
+            padding: 24px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 32px;
+            padding-left: 12px;
+        }
+
+        .logo-icon {
+            font-size: 28px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin: 4px 0;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #9ca3af;
+        }
+
+        .nav-item:hover {
+            background: rgba(99, 102, 241, 0.15);
+            color: #eef2ff;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.1));
+            color: #a855f7;
+            border-left: 3px solid #a855f7;
+        }
+
+        .main-panel {
+            flex: 1;
+            background: rgba(22, 22, 32, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 28px;
+        }
+
+        .images-grid {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .image-card {
+            flex: 1;
+            background: #1a1a24;
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid #2a2a35;
+        }
+
+        .image-card h3 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #9ca3af;
+        }
+
+        .upload-area {
+            aspect-ratio: 16 / 9;
+            background: #0f0f15;
+            border: 2px dashed #3a3a4a;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #6b7280;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: #a855f7;
+            background: #1a1a28;
+        }
+
+        .upload-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            font-size: 12px;
+            z-index: 1;
+        }
+
+        .settings-section {
+            background: #14141c;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .settings-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .setting-group {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        select, .duration-buttons {
+            width: 100%;
+            background: #0a0a0f;
+            border: 1px solid #2a2a35;
+            border-radius: 14px;
+            padding: 10px 12px;
+            color: #eef2ff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .duration-buttons {
+            display: flex;
+            gap: 8px;
+            background: transparent;
+            padding: 0;
+        }
+
+        .dur-btn {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            background: #0a0a0f;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #2a2a35;
+        }
+
+        .dur-btn.active {
+            background: #a855f7;
+            border-color: #a855f7;
+            color: white;
+        }
+
+        .generate-btn {
+            width: 100%;
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            border: none;
+            padding: 16px;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 16px;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            transform: scale(1.01);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .video-result {
+            margin-top: 24px;
+            background: #14141c;
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .video-preview {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 16px;
+        }
+
+        .credits-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0d0d12;
+            border-radius: 40px;
+            padding: 12px 20px;
+            margin-bottom: 24px;
+            border: 1px solid #2a2a35;
+        }
+
+        .credits {
+            font-weight: 600;
+        }
+
+        .credits span {
+            color: #fbbf24;
+        }
+
+        .cost {
+            color: #ef4444;
+        }
+
+        .community-links {
+            margin-top: 16px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .community-link {
+            background: #1a1a24;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 12px;
+            text-decoration: none;
+            color: #9ca3af;
+            transition: 0.2s;
+        }
+
+        .community-link:hover {
+            background: #a855f7;
+            color: white;
+        }
+
+        @media (max-width: 900px) {
+            .app-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                position: static;
+            }
+            .settings-row {
+                flex-direction: column;
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-msg {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            text-align: center;
+        }
+        
+        textarea {
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="logo">
+                <span class="logo-icon">🎬</span>
+                <span class="logo-text">Veo3</span>
+            </div>
+            <div class="nav-item active">🎨 Imagen a video</div>
+            <div class="nav-item">📝 Texto a video</div>
+            <div class="nav-item">🎥 Referencia al Video</div>
+            <div class="nav-item">🖼️ Texto a imagen</div>
+            <div class="nav-item">✨ Imagen a imagen</div>
+            <div class="nav-item">📱 Videos cortos de IA</div>
+            <div class="nav-item">📁 Mis creaciones</div>
+            
+            <div style="margin-top: 24px;">
+                <div class="community-links">
+                    <a href="#" class="community-link">📢 Canal Telegram</a>
+                    <a href="#" class="community-link">💬 Grupo Telegram</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-panel">
+            <div class="credits-bar">
+                <div class="credits">💎 Créditos: <span id="creditsAmount">100</span></div>
+                <div class="cost">⚡ Costo: <span id="costAmount">4</span></div>
+            </div>
+
+            <div class="images-grid">
+                <div class="image-card">
+                    <h3>🎬 First Frame (imagen inicial)</h3>
+                    <div class="upload-area" id="firstFrameArea">
+                        <div class="preview-placeholder" id="firstPlaceholder">
+                            📸 + <br>Subir imagen
+                        </div>
+                        <img id="firstPreview" style="display: none;">
+                    </div>
+                    <input type="file" id="firstInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
+                </div>
+                <div class="image-card">
+                    <h3>🏁 Last Frame (opcional)</h3>
+                    <div class="upload-area" id="lastFrameArea">
+                        <div class="preview-placeholder" id="lastPlaceholder">
+                            🖼️ + <br>Opcional
+                        </div>
+                        <img id="lastPreview" style="display: none;">
+                    </div>
+                    <input type="file" id="lastInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-row">
+                    <div class="setting-group">
+                        <label class="setting-label">🤖 Modelo</label>
+                        <select id="modelSelect">
+                            <option value="agnes-video-v2.0">Agnes Video 2.0</option>
+                            <option value="seedance-v1.5-pro">Seedance 1.5 Pro</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">📐 Relación</label>
+                        <select id="aspectSelect">
+                            <option value="16:9">16:9 (Horizontal)</option>
+                            <option value="9:16">9:16 (Vertical)</option>
+                            <option value="1:1">1:1 (Cuadrado)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-row">
+                    <div class="setting-group">
+                        <label class="setting-label">⏱️ Duración</label>
+                        <div class="duration-buttons">
+                            <div class="dur-btn" data-dur="4">4s</div>
+                            <div class="dur-btn active" data-dur="8">8s</div>
+                            <div class="dur-btn" data-dur="10">10s</div>
+                            <div class="dur-btn" data-dur="12">12s</div>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">📺 Resolución</label>
+                        <select id="resolutionSelect">
+                            <option value="480p">480p</option>
+                            <option value="720p" selected>720p</option>
+                            <option value="1080p">1080p</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-row">
+                    <div class="setting-group">
+                        <label class="setting-label">🔊 Sonido</label>
+                        <select id="soundSelect">
+                            <option value="none">Sin sonido</option>
+                            <option value="ambient">Ambiente + IA</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">💧 Marca de agua</label>
+                        <select id="watermarkSelect">
+                            <option value="yes">Con marca</option>
+                            <option value="no">Sin marca</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <label class="setting-label">✍️ Prompt de movimiento / escena</label>
+                <textarea id="promptInput" rows="3" style="width:100%; background:#0a0a0f; border:1px solid #2a2a35; border-radius:16px; padding:12px; color:white;" placeholder="Describe qué debe pasar en el video... Ejemplo: 'Cámara lenta hacia la izquierda, la persona sonríe suavemente, movimiento cinematográfico'"></textarea>
+            </div>
+
+            <button class="generate-btn" id="generateBtn">✨ GENERAR VIDEO ✨</button>
+
+            <div id="resultArea" style="display: none;" class="video-result">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <strong>🎥 Video generado</strong>
+                    <div>
+                        <button id="regenerateBtn" style="background:#2a2a35; border:none; padding:6px 12px; border-radius:20px; color:white; margin-right:8px; cursor:pointer;">🔄 Regenerar</button>
+                        <button id="reeditBtn" style="background:#2a2a35; border:none; padding:6px 12px; border-radius:20px; color:white; cursor:pointer;">✏️ Re-editar</button>
+                    </div>
+                </div>
+                <div class="video-preview">
+                    <video id="resultVideo" controls></video>
+                </div>
+            </div>
+
+            <div id="statusMessage" class="status-msg"></div>
+        </div>
+    </div>
+
+    <script>
+        // ✅ TU API KEY CONFIGURADA - Funciona inmediatamente
+        const AGNES_API_KEY = "sk-fM4qrWMEinrLwGGWV3RBoQCJHWuWuQar80qmwl9puDOWpmdg";
+        const AGNES_URL = "https://apihub.agnes-ai.com/v1/video/generations";
+        
+        // Estado
+        let firstFrameFile = null;
+        let lastFrameFile = null;
+        let selectedDuration = 8;
+        let isGenerating = false;
+        let userCredits = 100;
+        
+        // Elementos DOM
+        const firstFrameArea = document.getElementById('firstFrameArea');
+        const lastFrameArea = document.getElementById('lastFrameArea');
+        const firstInput = document.getElementById('firstInput');
+        const lastInput = document.getElementById('lastInput');
+        const firstPreview = document.getElementById('firstPreview');
+        const lastPreview = document.getElementById('lastPreview');
+        const firstPlaceholder = document.getElementById('firstPlaceholder');
+        const lastPlaceholder = document.getElementById('lastPlaceholder');
+        const generateBtn = document.getElementById('generateBtn');
+        const resultArea = document.getElementById('resultArea');
+        const resultVideo = document.getElementById('resultVideo');
+        const statusDiv = document.getElementById('statusMessage');
+        const creditsSpan = document.getElementById('creditsAmount');
+        const costSpan = document.getElementById('costAmount');
+        const promptInput = document.getElementById('promptInput');
+        
+        function updateCreditsUI() {
+            creditsSpan.innerText = userCredits;
+            let baseCost = 4;
+            if (document.getElementById('resolutionSelect').value === '1080p') baseCost += 2;
+            if (document.getElementById('watermarkSelect').value === 'no') baseCost += 2;
+            if (selectedDuration >= 10) baseCost += 1;
+            costSpan.innerText = baseCost;
+            return baseCost;
+        }
+        
+        function setupImageUpload(area, input, previewImg, placeholder, setFileCallback) {
+            area.addEventListener('click', () => input.click());
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        previewImg.src = ev.target.result;
+                        previewImg.style.display = 'block';
+                        placeholder.style.display = 'none';
+                        setFileCallback(file);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        
+        setupImageUpload(firstFrameArea, firstInput, firstPreview, firstPlaceholder, (f) => firstFrameFile = f);
+        setupImageUpload(lastFrameArea, lastInput, lastPreview, lastPlaceholder, (f) => lastFrameFile = f);
+        
+        document.querySelectorAll('.dur-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedDuration = parseInt(btn.getAttribute('data-dur'));
+                updateCreditsUI();
+            });
+        });
+        
+        document.getElementById('resolutionSelect').addEventListener('change', () => updateCreditsUI());
+        document.getElementById('watermarkSelect').addEventListener('change', () => updateCreditsUI());
+        
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]); // Enviar solo base64 sin prefijo
+                reader.onerror = error => reject(error);
+            });
+        }
+        
+        async function generateVideo() {
+            if (isGenerating) return;
+            if (!firstFrameFile) {
+                statusDiv.innerHTML = "❌ Debes subir una imagen inicial (First Frame)";
+                statusDiv.style.color = "#f87171";
+                return;
+            }
+            
+            const cost = updateCreditsUI();
+            if (userCredits < cost) {
+                statusDiv.innerHTML = "💰 Créditos insuficientes";
+                statusDiv.style.color = "#fbbf24";
+                return;
+            }
+            
+            userCredits -= cost;
+            updateCreditsUI();
+            
+            isGenerating = true;
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="loading-spinner"></span> Generando video... (30-60 segundos)';
+            statusDiv.innerHTML = "🎬 Procesando con IA... generando video, por favor espera.";
+            statusDiv.style.color = "#a855f7";
+            resultArea.style.display = 'none';
+            
+            try {
+                const firstBase64 = await fileToBase64(firstFrameFile);
+                let lastBase64 = null;
+                if (lastFrameFile) lastBase64 = await fileToBase64(lastFrameFile);
+                
+                let userPrompt = promptInput.value.trim();
+                if (userPrompt === "") {
+                    userPrompt = "Cinematic camera movement, smooth transition, high quality video";
+                }
+                
+                const payload = {
+                    model: document.getElementById('modelSelect').value,
+                    prompt: userPrompt,
+                    image: firstBase64,
+                    duration: selectedDuration,
+                    aspect_ratio: document.getElementById('aspectSelect').value,
+                    resolution: document.getElementById('resolutionSelect').value,
+                    audio: document.getElementById('soundSelect').value === 'ambient',
+                    watermark: document.getElementById('watermarkSelect').value === 'yes'
+                };
+                
+                if (lastBase64) {
+                    payload.last_image = lastBase64;
+                }
+                
+                console.log("Enviando petición a Agnes API...", payload);
+                
+                const response = await fetch(AGNES_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AGNES_API_KEY}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API error ${response.status}: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log("Respuesta API:", data);
+                
+                const videoUrl = data.output?.video_url || data.video_url || data.url;
+                
+                if (!videoUrl) {
+                    throw new Error("No se recibió URL de video");
+                }
+                
+                resultVideo.src = videoUrl;
+                resultArea.style.display = 'block';
+                statusDiv.innerHTML = "✅ ¡Video generado con éxito! Puedes verlo y descargarlo.";
+                statusDiv.style.color = "#4ade80";
+                
+            } catch (error) {
+                console.error(error);
+                statusDiv.innerHTML = `❌ Error: ${error.message}. Verifica tu API Key y conexión.`;
+                statusDiv.style.color = "#f87171";
+                userCredits += cost;
+                updateCreditsUI();
+            } finally {
+                isGenerating = false;
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '✨ GENERAR VIDEO ✨';
+            }
+        }
+        
+        generateBtn.addEventListener('click', generateVideo);
+        document.getElementById('regenerateBtn')?.addEventListener('click', () => generateVideo());
+        document.getElementById('reeditBtn')?.addEventListener('click', () => {
+            resultArea.style.display = 'none';
+            statusDiv.innerHTML = "✏️ Ajusta los parámetros y genera de nuevo.";
+        });
+        
+        updateCreditsUI();
+        statusDiv.innerHTML = "✅ Listo! Sube una imagen y haz clic en GENERAR VIDEO";
+        statusDiv.style.color = "#4ade80";
+    </script>
+</body>
+</html>
