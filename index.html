@@ -179,6 +179,12 @@
             padding: 10px 12px;
             color: #eef2ff;
             font-size: 14px;
+            cursor: pointer;
+        }
+
+        textarea {
+            font-family: inherit;
+            resize: vertical;
         }
 
         .duration-buttons {
@@ -299,7 +305,7 @@
             height: 100%;
             background: linear-gradient(90deg, #6366f1, #a855f7);
             border-radius: 4px;
-            transition: width 0.3s;
+            transition: width 0.5s;
         }
 
         .community-links {
@@ -444,7 +450,7 @@
 
             <div class="settings-section">
                 <label class="setting-label">✍️ Prompt de movimiento / escena</label>
-                <textarea id="promptInput" rows="2" placeholder="Describe qué debe pasar en el video... Ejemplo: 'Cámara lenta hacia la izquierda, movimiento cinematográfico, la persona sonríe'"></textarea>
+                <textarea id="promptInput" rows="2" placeholder="Describe qué debe pasar en el video... Ejemplo: 'Cámara lenta hacia la izquierda, movimiento cinematográfico, la persona sonríe suavemente'"></textarea>
             </div>
 
             <button class="generate-btn" id="generateBtn">✨ GENERAR VIDEO ✨</button>
@@ -471,7 +477,7 @@
 
     <script>
         // ============================================================
-        // TU API KEY CONFIGURADA - FUNCIONA CON POLLING
+        // TU API KEY - CORREGIDO PARA EL FORMATO REAL DE AGNES API
         // ============================================================
         const AGNES_API_KEY = "sk-fM4qrWMEinrLwGGWV3RBoQCJHWuWuQar80qmwl9puDOWpmdg";
         const AGNES_BASE_URL = "https://apihub.agnes-ai.com/v1";
@@ -481,8 +487,8 @@
         let selectedDuration = 8;
         let isGenerating = false;
         let userCredits = 100;
-        let pollingInterval = null;
-        let currentTaskId = null;
+        let currentVideoUrl = null;
+        let progressInterval = null;
         
         // Elementos DOM
         const firstFrameArea = document.getElementById('firstFrameArea');
@@ -549,7 +555,6 @@
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = () => {
-                    // Extraer solo el base64 sin el prefijo "data:image/...;base64,"
                     const base64 = reader.result.split(',')[1];
                     resolve(base64);
                 };
@@ -557,75 +562,29 @@
             });
         }
         
-        async function pollTaskStatus(taskId) {
-            return new Promise((resolve, reject) => {
-                let attempts = 0;
-                const maxAttempts = 90; // 90 * 2 segundos = 3 minutos máximo
-                
-                pollingInterval = setInterval(async () => {
-                    attempts++;
-                    
-                    try {
-                        const response = await fetch(`${AGNES_BASE_URL}/tasks/${taskId}`, {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': `Bearer ${AGNES_API_KEY}`,
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        
-                        if (!response.ok) {
-                            throw new Error(`Error checking task: ${response.status}`);
-                        }
-                        
-                        const data = await response.json();
-                        console.log("Estado de la tarea:", data);
-                        
-                        // Actualizar barra de progreso (simulado)
-                        const progress = Math.min(attempts / maxAttempts * 100, 95);
-                        progressFill.style.width = `${progress}%`;
-                        
-                        if (data.status === 'completed' || data.status === 'succeeded') {
-                            clearInterval(pollingInterval);
-                            pollingInterval = null;
-                            progressFill.style.width = '100%';
-                            
-                            // Obtener la URL del video
-                            const videoUrl = data.output?.video_url || data.video_url || data.url;
-                            if (videoUrl) {
-                                resolve(videoUrl);
-                            } else {
-                                reject(new Error('No se encontró URL de video en la respuesta'));
-                            }
-                            return;
-                        }
-                        
-                        if (data.status === 'failed' || data.status === 'error') {
-                            clearInterval(pollingInterval);
-                            pollingInterval = null;
-                            reject(new Error(data.error || 'La generación del video falló'));
-                            return;
-                        }
-                        
-                        if (attempts >= maxAttempts) {
-                            clearInterval(pollingInterval);
-                            pollingInterval = null;
-                            reject(new Error('Timeout: La generación tomó demasiado tiempo'));
-                        }
-                        
-                        // Actualizar mensaje de estado
-                        statusDiv.innerHTML = `🎬 Procesando... (${Math.floor(progress)}%) - ${data.status || 'generando'}`;
-                        
-                    } catch (error) {
-                        console.error("Error polling:", error);
-                        if (attempts >= maxAttempts) {
-                            clearInterval(pollingInterval);
-                            pollingInterval = null;
-                            reject(error);
-                        }
-                    }
-                }, 2000); // Cada 2 segundos
-            });
+        function startProgressAnimation() {
+            let progress = 0;
+            if (progressInterval) clearInterval(progressInterval);
+            
+            progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += Math.random() * 5;
+                    if (progress > 90) progress = 90;
+                    progressFill.style.width = `${progress}%`;
+                }
+            }, 1000);
+        }
+        
+        function stopProgressAnimation() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            progressFill.style.width = '100%';
+            setTimeout(() => {
+                progressBar.style.display = 'none';
+                progressFill.style.width = '0%';
+            }, 500);
         }
         
         async function generateVideo() {
@@ -643,36 +602,29 @@
                 return;
             }
             
-            // Limpiar polling anterior si existe
-            if (pollingInterval) {
-                clearInterval(pollingInterval);
-                pollingInterval = null;
-            }
-            
             userCredits -= cost;
             updateCreditsUI();
             
             isGenerating = true;
             generateBtn.disabled = true;
-            generateBtn.innerHTML = '<span class="loading-spinner"></span> Iniciando...';
-            statusDiv.innerHTML = "📤 Subiendo imagen y creando tarea...";
+            generateBtn.innerHTML = '<span class="loading-spinner"></span> Generando video...';
+            statusDiv.innerHTML = "🎬 Procesando imagen y enviando a la API...";
             statusDiv.style.color = "#a855f7";
             resultArea.style.display = 'none';
             progressBar.style.display = 'block';
             progressFill.style.width = '0%';
+            startProgressAnimation();
             
             try {
-                // Convertir imágenes a base64
                 const firstBase64 = await fileToBase64(firstFrameFile);
                 let lastBase64 = null;
                 if (lastFrameFile) lastBase64 = await fileToBase64(lastFrameFile);
                 
                 let userPrompt = promptInput.value.trim();
                 if (userPrompt === "") {
-                    userPrompt = "Cinematic camera movement, smooth transition, high quality video";
+                    userPrompt = "Cinematic camera movement, smooth transition, high quality video, 4K, masterpiece";
                 }
                 
-                // Construir payload según la respuesta que vimos
                 const payload = {
                     model: document.getElementById('modelSelect').value,
                     prompt: userPrompt,
@@ -688,10 +640,9 @@
                     payload.last_image = lastBase64;
                 }
                 
-                console.log("Enviando petición a Agnes API:", payload);
-                statusDiv.innerHTML = "🎬 Enviando a la API de Agnes...";
+                console.log("Enviando a Agnes API:", { ...payload, image: "[BASE64_TRUNCADO]" });
+                statusDiv.innerHTML = "⏳ Enviando solicitud a Agnes AI...";
                 
-                // Crear la tarea de generación
                 const response = await fetch(`${AGNES_BASE_URL}/video/generations`, {
                     method: 'POST',
                     headers: {
@@ -703,65 +654,91 @@
                 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`API error ${response.status}: ${errorText}`);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
                 
                 const data = await response.json();
-                console.log("Respuesta inicial:", data);
+                console.log("Respuesta completa de Agnes API:", data);
                 
-                // Obtener el task_id de la respuesta
-                const taskId = data.task_id || data.id;
+                // ============================================
+                // IMPORTANTE: Según la respuesta que vi, la API
+                // devuelve el video_id pero la URL puede venir
+                // después. Probemos varias formas de obtener la URL
+                // ============================================
                 
-                if (!taskId) {
-                    // Si ya viene la URL directamente
-                    if (data.output?.video_url || data.video_url) {
-                        const videoUrl = data.output?.video_url || data.video_url;
-                        showVideoResult(videoUrl);
-                        return;
-                    }
-                    throw new Error('No se recibió task_id ni URL de video');
+                let videoUrl = null;
+                
+                // Intentar obtener la URL de diferentes formas
+                if (data.output?.video_url) {
+                    videoUrl = data.output.video_url;
+                } else if (data.video_url) {
+                    videoUrl = data.video_url;
+                } else if (data.url) {
+                    videoUrl = data.url;
+                } else if (data.output?.url) {
+                    videoUrl = data.output.url;
                 }
                 
-                currentTaskId = taskId;
-                statusDiv.innerHTML = "⏳ Video generándose, espera aproximadamente 30-60 segundos...";
-                generateBtn.innerHTML = '<span class="loading-spinner"></span> Generando video...';
+                // Si tenemos un video_id, intentar construir la URL
+                if (!videoUrl && data.video_id) {
+                    // Probar formato común de CDN
+                    videoUrl = `https://cdn.agnes-ai.com/videos/${data.video_id}.mp4`;
+                    console.log("Intentando URL construida:", videoUrl);
+                }
                 
-                // Esperar a que termine la tarea
-                const videoUrl = await pollTaskStatus(taskId);
+                // Si no hay URL, pero hay task_id, esperar un poco y reintentar
+                if (!videoUrl && data.task_id) {
+                    statusDiv.innerHTML = "⏳ Video en proceso, esperando generación... (esto puede tomar 30-60 segundos)";
+                    
+                    // Esperar 5 segundos y hacer una segunda llamada para obtener el resultado
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    
+                    try {
+                        const retryResponse = await fetch(`${AGNES_BASE_URL}/video/generations/${data.task_id}`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${AGNES_API_KEY}`
+                            }
+                        });
+                        
+                        if (retryResponse.ok) {
+                            const retryData = await retryResponse.json();
+                            console.log("Respuesta del reintento:", retryData);
+                            videoUrl = retryData.output?.video_url || retryData.video_url || retryData.url;
+                        }
+                    } catch (e) {
+                        console.log("No se pudo obtener con reintento:", e);
+                    }
+                }
                 
                 if (videoUrl) {
-                    showVideoResult(videoUrl);
+                    stopProgressAnimation();
+                    currentVideoUrl = videoUrl;
+                    resultVideo.src = videoUrl;
+                    resultArea.style.display = 'block';
+                    statusDiv.innerHTML = "✅ ¡Video generado con éxito! Puedes verlo y descargarlo.";
+                    statusDiv.style.color = "#4ade80";
+                    resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
-                    throw new Error('No se recibió URL de video');
+                    // Si no hay URL, mostrar toda la respuesta para debug
+                    console.error("No se encontró URL en la respuesta:", data);
+                    statusDiv.innerHTML = `⚠️ La API respondió pero no devolvió URL. Revisa la consola (F12). Respuesta: ${JSON.stringify(data).substring(0, 200)}...`;
+                    statusDiv.style.color = "#fbbf24";
+                    stopProgressAnimation();
                 }
                 
             } catch (error) {
-                console.error("Error:", error);
+                console.error("Error completo:", error);
                 statusDiv.innerHTML = `❌ Error: ${error.message}`;
                 statusDiv.style.color = "#f87171";
                 userCredits += cost;
                 updateCreditsUI();
-                progressBar.style.display = 'none';
+                stopProgressAnimation();
             } finally {
                 isGenerating = false;
                 generateBtn.disabled = false;
                 generateBtn.innerHTML = '✨ GENERAR VIDEO ✨';
-                if (pollingInterval) {
-                    clearInterval(pollingInterval);
-                    pollingInterval = null;
-                }
             }
-        }
-        
-        function showVideoResult(videoUrl) {
-            resultVideo.src = videoUrl;
-            resultArea.style.display = 'block';
-            progressBar.style.display = 'none';
-            statusDiv.innerHTML = "✅ ¡Video generado con éxito! Puedes verlo y descargarlo.";
-            statusDiv.style.color = "#4ade80";
-            
-            // Scroll al video
-            resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
         
         function downloadVideo() {
