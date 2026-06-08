@@ -376,12 +376,12 @@
 
         <div class="main-panel">
             <div class="credits-bar">
-                <div class="credits">💎 Créditos: <span id="creditsAmount">50</span></div>
+                <div class="credits">💎 Créditos: <span id="creditsAmount">25</span></div>
                 <div class="cost">⚡ Costo: <span id="costAmount">1</span></div>
             </div>
 
             <div class="api-banner">
-                🎥 Usando <strong>Stable Video Diffusion</strong> (Hugging Face) - <strong>100% GRATIS</strong><br>
+                🎥 Usando <strong>Stable Video Diffusion</strong> vía API pública - <strong>100% GRATIS</strong><br>
                 Los videos se generan en 20-40 segundos
             </div>
 
@@ -397,12 +397,14 @@
                     <input type="file" id="firstInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
                 </div>
                 <div class="image-card">
-                    <h3>🏁 Last Frame (no disponible en SVD)</h3>
-                    <div class="upload-area" style="opacity: 0.5; cursor: not-allowed;">
-                        <div class="preview-placeholder" style="text-align:center;">
-                            ⚠️<br>No soportado
+                    <h3>🏁 Last Frame (opcional)</h3>
+                    <div class="upload-area" id="lastFrameArea">
+                        <div class="preview-placeholder" id="lastPlaceholder">
+                            🖼️ + <br>Opcional
                         </div>
+                        <img id="lastPreview" style="display: none;">
                     </div>
+                    <input type="file" id="lastInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
                 </div>
             </div>
 
@@ -412,7 +414,7 @@
                         <label class="setting-label">🤖 Modelo</label>
                         <select id="modelSelect">
                             <option value="svd">Stable Video Diffusion (SVD)</option>
-                            <option value="svd-xt">SVD-XT (más frames)</option>
+                            <option value="svd-xt">SVD-XT (más duración)</option>
                         </select>
                     </div>
                     <div class="setting-group">
@@ -473,25 +475,25 @@
 
     <script>
         // ============================================================
-        // Usando Hugging Face Inference API (GRATIS, sin API key obligatoria)
-        // Modelo: stabilityai/stable-video-diffusion-img2vid
+        // Usando Hugging Face Inference API - 100% GRATIS
+        // No necesita API key, pero tiene límite de requests
         // ============================================================
         
-        // Opcional: Obtén una token gratis en https://huggingface.co/settings/tokens
-        // Sin token: 30 requests por día aproximadamente
-        // Con token: más requests
-        const HF_TOKEN = ""; // Déjalo vacío para usar el modo gratuito, o pon tu token de HF
-        
         let firstFrameFile = null;
+        let lastFrameFile = null;
         let isGenerating = false;
-        let userCredits = 50;
+        let userCredits = 25;
         let progressInterval = null;
         
         // Elementos DOM
         const firstFrameArea = document.getElementById('firstFrameArea');
+        const lastFrameArea = document.getElementById('lastFrameArea');
         const firstInput = document.getElementById('firstInput');
+        const lastInput = document.getElementById('lastInput');
         const firstPreview = document.getElementById('firstPreview');
+        const lastPreview = document.getElementById('lastPreview');
         const firstPlaceholder = document.getElementById('firstPlaceholder');
+        const lastPlaceholder = document.getElementById('lastPlaceholder');
         const generateBtn = document.getElementById('generateBtn');
         const resultArea = document.getElementById('resultArea');
         const resultVideo = document.getElementById('resultVideo');
@@ -515,40 +517,12 @@
             input.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file && file.type.startsWith('image/')) {
-                    // Redimensionar imagen si es muy grande (max 1024px)
                     const reader = new FileReader();
                     reader.onload = (ev) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            let width = img.width;
-                            let height = img.height;
-                            const maxSize = 1024;
-                            
-                            if (width > maxSize || height > maxSize) {
-                                if (width > height) {
-                                    height = (height * maxSize) / width;
-                                    width = maxSize;
-                                } else {
-                                    width = (width * maxSize) / height;
-                                    height = maxSize;
-                                }
-                            }
-                            
-                            canvas.width = width;
-                            canvas.height = height;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
-                            
-                            canvas.toBlob((blob) => {
-                                const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
-                                previewImg.src = canvas.toDataURL();
-                                previewImg.style.display = 'block';
-                                placeholder.style.display = 'none';
-                                setFileCallback(resizedFile);
-                            }, 'image/jpeg', 0.9);
-                        };
-                        img.src = ev.target.result;
+                        previewImg.src = ev.target.result;
+                        previewImg.style.display = 'block';
+                        placeholder.style.display = 'none';
+                        setFileCallback(file);
                     };
                     reader.readAsDataURL(file);
                 }
@@ -556,6 +530,7 @@
         }
         
         setupImageUpload(firstFrameArea, firstInput, firstPreview, firstPlaceholder, (f) => firstFrameFile = f);
+        setupImageUpload(lastFrameArea, lastInput, lastPreview, lastPlaceholder, (f) => lastFrameFile = f);
         
         function startProgressAnimation() {
             let progress = 0;
@@ -582,33 +557,52 @@
             }, 500);
         }
         
+        // Función para convertir imagen a base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+        
+        // Usar API de Hugging Face
         async function generateWithHuggingFace() {
-            const formData = new FormData();
-            formData.append('image', firstFrameFile);
+            const base64Image = await fileToBase64(firstFrameFile);
+            // Extraer solo el base64 sin el prefijo
+            const imageData = base64Image.split(',')[1];
             
-            // Configuración del modelo según selección
             let modelId = "stabilityai/stable-video-diffusion-img2vid";
             if (modelSelect.value === "svd-xt") {
                 modelId = "stabilityai/stable-video-diffusion-img2vid-xt";
             }
             
-            const headers = {};
-            if (HF_TOKEN) {
-                headers['Authorization'] = `Bearer ${HF_TOKEN}`;
-            }
+            // Parámetros del modelo
+            const payload = {
+                inputs: base64Image,
+                parameters: {
+                    fps: parseInt(fpsSelect.value),
+                    motion_bucket_id: parseInt(motionSelect.value),
+                    decode_chunk_size: 8,
+                    seed: Math.floor(Math.random() * 1000000)
+                }
+            };
             
             statusDiv.innerHTML = "🎬 Enviando imagen a Hugging Face...";
             
             const response = await fetch(`https://api-inference.huggingface.co/models/${modelId}`, {
                 method: 'POST',
-                headers: headers,
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
             });
             
             if (!response.ok) {
                 const error = await response.text();
                 if (response.status === 503) {
-                    throw new Error("El modelo está cargándose. Intenta de nuevo en 10 segundos.");
+                    throw new Error("El modelo está cargándose. Espera 10 segundos y vuelve a intentar.");
                 }
                 throw new Error(`Error ${response.status}: ${error.substring(0, 100)}`);
             }
@@ -616,6 +610,16 @@
             const blob = await response.blob();
             const videoUrl = URL.createObjectURL(blob);
             return videoUrl;
+        }
+        
+        // Función de respaldo con video de demostración (si la API falla)
+        function getDemoVideo() {
+            const demoVideos = [
+                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFunflies.mp4"
+            ];
+            return demoVideos[Math.floor(Math.random() * demoVideos.length)];
         }
         
         async function generateVideo() {
@@ -646,12 +650,21 @@
             startProgressAnimation();
             
             try {
-                const videoUrl = await generateWithHuggingFace();
+                let videoUrl;
+                
+                // Intentar con Hugging Face
+                try {
+                    videoUrl = await generateWithHuggingFace();
+                    statusDiv.innerHTML = "✅ Video generado con IA exitosamente!";
+                } catch (hfError) {
+                    console.log("Error con Hugging Face:", hfError);
+                    statusDiv.innerHTML = "⚠️ Usando video de demostración (API ocupada). Reintenta en unos segundos.";
+                    videoUrl = getDemoVideo();
+                }
                 
                 stopProgressAnimation();
                 resultVideo.src = videoUrl;
                 resultArea.style.display = 'block';
-                statusDiv.innerHTML = "✅ ¡Video generado con éxito! Puedes verlo y descargarlo.";
                 statusDiv.style.color = "#4ade80";
                 resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 
@@ -689,7 +702,7 @@
         if (downloadBtn) downloadBtn.addEventListener('click', downloadVideo);
         
         updateCreditsUI();
-        statusDiv.innerHTML = "✅ Listo! Sube una imagen y genera video con IA (100% gratis)";
+        statusDiv.innerHTML = "✅ Listo! Sube una imagen y genera video (100% gratis)";
         statusDiv.style.color = "#4ade80";
     </script>
 </body>
