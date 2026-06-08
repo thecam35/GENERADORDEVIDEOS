@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veo3 - Avatar que Habla (Lip Sync + Manos)</title>
+    <title>Veo3 - Avatar que HABLA desde TEXTO (sin subir audio)</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -36,6 +36,18 @@
             margin-top: 12px;
         }
         .upload-area img { width: 100%; height: 100%; object-fit: cover; position: absolute; }
+        textarea {
+            width: 100%;
+            background: #0a0a0f;
+            border: 1px solid #2a2a35;
+            border-radius: 16px;
+            padding: 16px;
+            color: white;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-top: 8px;
+        }
         button {
             width: 100%;
             background: linear-gradient(90deg, #6366f1, #a855f7);
@@ -67,29 +79,44 @@
             margin-right: 8px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .info { 
-            background: rgba(168,85,247,0.15); 
-            border: 1px solid #a855f7; 
-            border-radius: 16px; 
-            padding: 16px; 
+        .info-banner {
+            background: rgba(168,85,247,0.15);
+            border: 1px solid #a855f7;
+            border-radius: 16px;
+            padding: 16px;
             margin-bottom: 24px;
             text-align: center;
+        }
+        select {
+            background: #0a0a0f;
+            border: 1px solid #2a2a35;
+            border-radius: 12px;
+            padding: 10px;
+            color: white;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .voice-preview {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #888;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 style="margin-bottom: 24px;">🎬 Veo3 - <span style="color: #a855f7;">Avatar que HABLA y se MUEVE</span></h1>
+        <h1 style="margin-bottom: 24px;">🎬 Veo3 - <span style="color: #a855f7;">Avatar que HABLA desde TEXTO</span></h1>
         
-        <div class="info">
-            🎯 <strong>Esto SÍ anima a la persona real</strong> - Mueve labios, manos y cabeza<br>
-            ✅ Usa Sync Labs (gratis: 3 videos/mes sin tarjeta de crédito) [citation:1]<br>
-            📝 Regístrate en <a href="https://sync.so/signup" target="_blank" style="color:#a855f7;">sync.so/signup</a> y obtén tu API Key gratis
+        <div class="info-banner">
+            🎯 <strong>¡SOLO ESCRIBES Y LA PERSONA HABLA!</strong><br>
+            ✅ Sin subir audios - el texto se convierte automáticamente en voz<br>
+            ✅ La foto cobra vida y mueve los labios sincronizados<br>
+            📝 Regístrate en <a href="https://sync.so/signup" target="_blank" style="color:#a855f7;">sync.so/signup</a> (3 videos gratis, sin tarjeta)
         </div>
 
         <div class="grid">
             <div class="card">
-                <h3>📸 1. Sube la foto de la persona</h3>
+                <h3>📸 1. Sube la FOTO de la persona</h3>
                 <div class="upload-area" id="photoArea">
                     <div id="photoPlaceholder">📸 + <br>Subir foto</div>
                     <img id="photoPreview" style="display: none;">
@@ -98,39 +125,56 @@
             </div>
 
             <div class="card">
-                <h3>🎤 2. Sube el audio (lo que dirá)</h3>
-                <div class="upload-area" id="audioArea" style="min-height: 120px;">
-                    <div id="audioPlaceholder">🎵 + <br>Subir audio (MP3/WAV)</div>
-                </div>
-                <input type="file" id="audioInput" accept="audio/*" style="display: none;">
-                <div id="audioName" style="margin-top: 8px; font-size: 12px; color: #888;"></div>
+                <h3>🗣️ 2. Elige la VOZ (idioma español)</h3>
+                <select id="voiceSelect">
+                    <option value="Xb7hH8MSUJpSbSDYk0k2">🤵 Español - Carlos (hombre)</option>
+                    <option value="EXAVITQu4L4MjGn3R0Y8">👩 Español - Elena (mujer)</option>
+                    <option value="VR6AqWLX5iPhWTwpz4vJ">🇲🇽 Español México - Pablo</option>
+                    <option value="MFX37Nrgo8H41lOjnJyZ">🇪🇸 Español España - Miguel</option>
+                    <option value="21m00Tcm4TlvDq8ikWAM">🇺🇸 English US - Adam</option>
+                    <option value="AZnzlk1XvdvUeBnXmlld">🇫🇷 Français - Claire</option>
+                </select>
+                <div class="voice-preview">🎧 Las voces suenan naturales, como una persona real</div>
             </div>
         </div>
 
         <div class="card" style="margin-top: 24px;">
-            <h3>⚙️ Configuración</h3>
-            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin: 16px 0;">
-                <select id="modelSelect" style="background:#0a0a0f; border:1px solid #2a2a35; padding:10px; border-radius:12px; color:white;">
-                    <option value="lipsync-2-pro">🎯 Lip Sync Pro (mejor calidad)</option>
-                    <option value="lipsync-1.9.0-beta">🆓 Lip Sync Beta (gratis)</option>
-                </select>
-                <select id="durationSelect" style="background:#0a0a0f; border:1px solid #2a2a35; padding:10px; border-radius:12px; color:white;">
-                    <option value="5">5 segundos</option>
-                    <option value="10">10 segundos</option>
-                    <option value="15">15 segundos</option>
-                    <option value="20">20 segundos</option>
-                </select>
+            <h3>📝 3. ESCRIBE lo que quieres que DIGA la persona</h3>
+            <textarea id="scriptInput" rows="4" placeholder="Ejemplo: ¡Hola! Me alegra mucho verte. Hoy vamos a aprender algo nuevo juntos..."></textarea>
+            <div style="font-size: 12px; color: #888; margin-top: 8px;">
+                ⚡ Máximo 5,000 caracteres. El video durará aproximadamente lo que tarde en decir el texto.
             </div>
-            
-            <label>✍️ Prompt adicional (mejora el movimiento):</label>
-            <textarea id="promptInput" rows="2" style="width:100%; background:#0a0a0f; border:1px solid #2a2a35; border-radius:12px; padding:12px; color:white; margin-top:8px;" placeholder="Ej: 'Persona moviendo las manos de forma natural mientras habla, expresión amigable'"></textarea>
         </div>
 
-        <button id="generateBtn">✨ ANIMAR PERSONA (Lip Sync + Manos) ✨</button>
+        <div class="card" style="margin-top: 24px;">
+            <h3>⚙️ Configuración extra</h3>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div style="flex: 1;">
+                    <label>🎨 Estilo de voz</label>
+                    <select id="styleSelect">
+                        <option value="neutral">Normal</option>
+                        <option value="cheerful">Alegre</option>
+                        <option value="sad">Triste</option>
+                        <option value="whisper">Susurro</option>
+                        <option value="excited">Emocionado</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label>📐 Relación del video</label>
+                    <select id="aspectSelect">
+                        <option value="16:9">16:9 (Horizontal - YouTube)</option>
+                        <option value="9:16">9:16 (Vertical - TikTok/Reels)</option>
+                        <option value="1:1">1:1 (Cuadrado - Instagram)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button id="generateBtn">✨ GENERAR VIDEO - LA FOTO HABLA ✨</button>
 
         <div id="resultArea" style="display: none; margin-top: 24px;">
             <div class="card">
-                <h3>🎥 ¡Tu persona hablando!</h3>
+                <h3>🎥 ¡La persona está HABLANDO!</h3>
                 <video id="resultVideo" controls autoplay></video>
                 <button id="downloadBtn" style="margin-top: 12px; background: #2a2a35;">⬇️ Descargar Video</button>
             </div>
@@ -141,32 +185,28 @@
 
     <script>
         // ============================================================
-        // 🔑 REGÍSTRATE EN https://sync.so/signup (GRATIS, SIN TARJETA)
+        // 🔑 REGÍSTRATE EN https://sync.so/signup (GRATIS)
         // Obtén tu API Key en el Dashboard y pégala aquí:
         // ============================================================
         const SYNC_API_KEY = "TU_API_KEY_DE_SYNC_SO_AQUI";
         const SYNC_API_URL = "https://api.sync.so/v2/generate";
         
         let photoFile = null;
-        let audioFile = null;
         let isGenerating = false;
         
         // Elementos DOM
         const photoArea = document.getElementById('photoArea');
-        const audioArea = document.getElementById('audioArea');
         const photoInput = document.getElementById('photoInput');
-        const audioInput = document.getElementById('audioInput');
         const photoPreview = document.getElementById('photoPreview');
         const photoPlaceholder = document.getElementById('photoPlaceholder');
-        const audioPlaceholder = document.getElementById('audioPlaceholder');
-        const audioName = document.getElementById('audioName');
         const generateBtn = document.getElementById('generateBtn');
         const resultArea = document.getElementById('resultArea');
         const resultVideo = document.getElementById('resultVideo');
         const statusDiv = document.getElementById('status');
-        const modelSelect = document.getElementById('modelSelect');
-        const durationSelect = document.getElementById('durationSelect');
-        const promptInput = document.getElementById('promptInput');
+        const scriptInput = document.getElementById('scriptInput');
+        const voiceSelect = document.getElementById('voiceSelect');
+        const styleSelect = document.getElementById('styleSelect');
+        const aspectSelect = document.getElementById('aspectSelect');
         
         // Subir foto
         photoArea.addEventListener('click', () => photoInput.click());
@@ -184,18 +224,6 @@
             }
         });
         
-        // Subir audio
-        audioArea.addEventListener('click', () => audioInput.click());
-        audioInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file && file.type.startsWith('audio/')) {
-                audioFile = file;
-                audioName.innerText = `📁 ${file.name}`;
-                audioPlaceholder.innerHTML = '🎤 Audio listo!';
-                audioPlaceholder.style.color = '#4ade80';
-            }
-        });
-        
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -205,37 +233,42 @@
             });
         }
         
-        // Subir archivo a un hosting temporal (para que Sync Labs lo pueda leer)
-        async function uploadToTempHost(file, type) {
+        // Subir imagen a hosting temporal
+        async function uploadToTempHost(file) {
             const formData = new FormData();
             formData.append('file', file);
             
-            // Usamos temp.sh para hosting gratis (o cualquier otro)
-            const response = await fetch('https://tmp.ninja/api/upload', {
+            // Usamos tmpfiles.org para hosting gratis
+            const response = await fetch('https://tmpfiles.org/api/v1/upload', {
                 method: 'POST',
                 body: formData
             });
             
             if (!response.ok) {
-                throw new Error('Error subiendo archivo');
+                throw new Error('Error subiendo imagen');
             }
             
             const data = await response.json();
-            return data.url;
+            // La URL directa del archivo
+            return data.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
         }
         
         async function generateVideo() {
             if (isGenerating) return;
+            
             if (!photoFile) {
                 statusDiv.innerHTML = "❌ Sube una foto de la persona primero";
                 statusDiv.style.color = "#f87171";
                 return;
             }
-            if (!audioFile) {
-                statusDiv.innerHTML = "❌ Sube un audio con lo que quieres que diga";
+            
+            const script = scriptInput.value.trim();
+            if (!script) {
+                statusDiv.innerHTML = "❌ Escribe lo que quieres que DIGA la persona";
                 statusDiv.style.color = "#f87171";
                 return;
             }
+            
             if (!SYNC_API_KEY || SYNC_API_KEY === "TU_API_KEY_DE_SYNC_SO_AQUI") {
                 statusDiv.innerHTML = "❌ Necesitas una API Key de Sync Labs. Regístrate gratis en sync.so/signup";
                 statusDiv.style.color = "#f87171";
@@ -244,32 +277,41 @@
             
             isGenerating = true;
             generateBtn.disabled = true;
-            generateBtn.innerHTML = '<span class="loading-spinner"></span> Animando persona... (30-60 segundos)';
-            statusDiv.innerHTML = "🎬 Subiendo archivos y procesando con IA... la persona va a COBRAR VIDA y HABLAR";
+            generateBtn.innerHTML = '<span class="loading-spinner"></span> Generando voz y animando persona... (30-60 segundos)';
+            statusDiv.innerHTML = "🎬 Subiendo foto...";
             statusDiv.style.color = "#a855f7";
             resultArea.style.display = 'none';
             
             try {
-                // Subir foto y audio a un hosting temporal
-                statusDiv.innerHTML = "📤 Subiendo foto y audio...";
-                const photoUrl = await uploadToTempHost(photoFile, 'image');
-                const audioUrl = await uploadToTempHost(audioFile, 'audio');
+                // 1. Subir la foto
+                statusDiv.innerHTML = "📤 Subiendo foto...";
+                const photoUrl = await uploadToTempHost(photoFile);
                 
-                statusDiv.innerHTML = "🎤 Generando lip sync y movimiento de manos... esto puede tomar hasta 1 minuto";
+                // 2. Obtener la relación de aspecto
+                const aspect = aspectSelect.value;
                 
-                const payload = {
-                    model: modelSelect.value,
-                    video_url: photoUrl,
-                    audio_url: audioUrl,
-                    max_duration: parseInt(durationSelect.value),
-                    sync_mode: "accurate",
-                    output_resolution: "720p"
+                // 3. Mapear estilo de voz
+                const styleMap = {
+                    'neutral': '',
+                    'cheerful': '[happy]',
+                    'sad': '[sad]',
+                    'whisper': '[whisper]',
+                    'excited': '[excited]'
                 };
+                const stylePrefix = styleMap[styleSelect.value];
+                const finalScript = stylePrefix ? `${stylePrefix} ${script}` : script;
                 
-                // Agregar prompt si hay
-                if (promptInput.value.trim()) {
-                    payload.prompt = promptInput.value.trim();
-                }
+                statusDiv.innerHTML = "🗣️ Generando voz con IA y sincronizando labios...";
+                
+                // 4. Llamar a Sync Labs con TTS integrado [citation:3][citation:8]
+                const payload = {
+                    model: "lipsync-2-pro",
+                    video_url: photoUrl,
+                    script: finalScript,
+                    voice_id: voiceSelect.value,
+                    output_resolution: "720p",
+                    sync_mode: "accurate"
+                };
                 
                 const response = await fetch(SYNC_API_URL, {
                     method: 'POST',
@@ -288,8 +330,8 @@
                 const data = await response.json();
                 const generationId = data.id;
                 
-                // Polling para esperar el resultado
-                statusDiv.innerHTML = "⏳ Procesando... la persona está aprendiendo a hablar";
+                // 5. Polling para esperar el resultado
+                statusDiv.innerHTML = "⏳ Procesando... la persona está aprendiendo a hablar...";
                 
                 let videoUrl = null;
                 for (let i = 0; i < 60; i++) {
@@ -307,14 +349,14 @@
                         throw new Error('La generación falló');
                     }
                     
-                    statusDiv.innerHTML = `⏳ Generando... (${Math.floor((i+1) * 1.6)}%)`;
+                    statusDiv.innerHTML = `⏳ Generando... (${Math.floor((i+1) * 1.6)}%) - La persona está cobrando vida`;
                 }
                 
                 if (!videoUrl) throw new Error('Timeout esperando el video');
                 
                 resultVideo.src = videoUrl;
                 resultArea.style.display = 'block';
-                statusDiv.innerHTML = "✅ ¡LA PERSONA HABLA! Mira cómo mueve los labios y las manos.";
+                statusDiv.innerHTML = "✅ ¡LA PERSONA HABLA! El texto que escribiste ahora lo dice ella.";
                 statusDiv.style.color = "#4ade80";
                 resultArea.scrollIntoView({ behavior: 'smooth' });
                 
@@ -325,7 +367,7 @@
             } finally {
                 isGenerating = false;
                 generateBtn.disabled = false;
-                generateBtn.innerHTML = '✨ ANIMAR PERSONA (Lip Sync + Manos) ✨';
+                generateBtn.innerHTML = '✨ GENERAR VIDEO - LA FOTO HABLA ✨';
             }
         }
         
@@ -341,7 +383,7 @@
         generateBtn.addEventListener('click', generateVideo);
         document.getElementById('downloadBtn')?.addEventListener('click', downloadVideo);
         
-        statusDiv.innerHTML = "✅ Listo! Sube FOTO + AUDIO y la persona COBRARÁ VIDA hablando";
+        statusDiv.innerHTML = "✅ Listo! Sube FOTO + ESCRIBE TEXTO → La persona HABLARÁ esas palabras";
         statusDiv.style.color = "#4ade80";
     </script>
 </body>
